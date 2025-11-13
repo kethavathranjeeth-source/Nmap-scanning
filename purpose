@@ -1,0 +1,8 @@
+#Purpose:
+Understand what software or functionality is exposed so you can assess risk (e.g., SSH, HTTP, SMB).
+#How to research:
+Match port numbers to well-known services (22 → SSH, 80 → HTTP, 139/445 → SMB).
+Use nmap -sV to get service version strings: sudo nmap -sS -sV -p22,80 192.168.1.10.
+Search vendor documentation/CVE databases for version-specific vulnerabilities.
+Report content: For each service include: port, probable service, version (if known), and common risks (e.g., outdated HTTP server may have remote code execution CVEs).
+Why it matters: Knowing the exact service/version allows precise vulnerability assessment and remediation planning.
