@@ -1,0 +1,12 @@
+#Overview
+A controlled network reconnaissance was conducted using Nmap to discover devices and exposed services within the internal subnet (192.168.1.0/24). The goal was to understand the network’s current security posture, highlight unnecessary open ports, and identify services requiring hardening or patching.
+#Methodology
+1.	Tool Setup: Nmap installed from the official website (nmap.org).
+2.	Network Identification: Local IP range identified via ipconfig/ip a commands.
+3.	Scanning Technique: nmap -sS 192.168.1.0/24 (TCP SYN scan) performed to detect open ports with minimal network disruption.
+4.	Data Capture: Results recorded and optionally verified via Wireshark packet capture.
+5.	Analysis: Common services mapped to known risks; findings classified by severity.
+#Conclusion
+The scan confirmed that the internal network hosts several open services which, if left unmanaged, may present significant security risks. Immediate remediation of high-risk exposures is recommended.
+Continued periodic Nmap assessments, combined with log monitoring and patch management, will enhance network resilience and visibility.
+
