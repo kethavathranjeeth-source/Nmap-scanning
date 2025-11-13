@@ -1,0 +1,85 @@
+#Install Nmap from the official website
+Purpose: Obtain a trustworthy, up-to-date Nmap binary to perform network discovery and port scanning.
+What to do:
+•	Go to the official Nmap site (nmap.org) and download the installer for your platform (Windows .exe installer, macOS .dmg or Homebrew, Linux packages or source).
+•	On Debian/Ubuntu you can install from repositories: sudo apt update && sudo apt install nmap (but verify version vs. official site if you need the latest).
+•	On Windows, run the downloaded installer and allow WinPcap/Npcap installation (required for raw packet scans).
+Why it matters: Official downloads reduce risk of tampered binaries and ensure compatibility with required libraries (libpcap/Npcap).
+Verification / Evidence: Include installer checksum (SHA256) from the site and the output of nmap --version after install.
+Note / Caution: Only install software from trusted sources and run as needed — follow your organization’s change-control.
+
+# Find your local IP range (e.g., 192.168.1.0/24)
+Purpose: Determine the network(s) you are permitted to scan and the correct CIDR range to feed Nmap.
+How to find it (examples):
+•	Linux/macOS: ip addr show or ip a (look for inet 192.168.1.10/24) or ifconfig.
+•	Windows: ipconfig and note IPv4 address and subnet mask; convert to CIDR (e.g., 255.255.255.0 → /24).
+What to record: Your IP, subnet mask, gateway, and CIDR notation (e.g., 192.168.1.0/24).
+Why it matters: Scanning the correct CIDR avoids scanning unrelated networks and produces meaningful inventory results.
+Evidence: Paste the ip a / ipconfig output in the report.
+
+Run: nmap -sS 192.168.1.0/24 to perform TCP SYN scan
+Purpose: Perform a fast and stealthy scan of the whole network to discover hosts and open TCP services (SYN scan, often called “half-open”).
+Command explanation:
+•	-sS — SYN (stealth) scan: sends SYN and waits for SYN/ACK to report open. Requires privileged access on most OSes.
+•	192.168.1.0/24 — the target CIDR discovered in step 2.
+Recommended safer/alternative options:
+•	If not root: nmap -sT 192.168.1.0/24 (TCP connect scan).
+•	Add -Pn if hosts block ICMP/host discovery: nmap -sS -Pn 192.168.1.0/24.
+•	Add --reason for why Nmap classified ports: --reason.
+Expected output (summary): List of live hosts and open ports per host, e.g.:
+Nmap scan report for 192.168.1.10
+#PORT    STATE SERVICE
+22/tcp  open  ssh
+80/tcp  open  http
+Why it matters: Identifies reachable hosts and services you may need to inventory or secure.
+Ethics & legal note: Only run scans against networks you own or have explicit permission to scan.
+Note down IP addresses and open ports found
+Purpose: Create an inventory of network hosts and services as the basis for vulnerability assessment or network documentation.
+#What to record per host:
+•	IP address and hostname (if resolved).
+•	MAC address (if shown) and vendor (helps identify device type).
+•	Open ports (port/protocol) and service names.
+•	Service version (if -sV used).
+•	Scan date/time and command used.
+#Example table (for your report):
+IP	Hostname	MAC	Open Ports + Service	Notes
+192.168.1.10	web01	00:11:22:33:44:55	22/tcp (ssh), 80/tcp (http)	SSH open for admin
+Why it matters: Organized data enables prioritized remediation and tracking over time.
+
+ #Optionally analyze packet capture with Wireshark
+Purpose: Confirm what packets are actually being sent/received during a scan and diagnose filtering, firewalls, or anomalous responses.
+How to capture:
+•	On Linux, run as root: sudo tcpdump -i eth0 host 192.168.1.10 -w scan.pcap while running your Nmap scan.
+•	Open scan.pcap in Wireshark for visual analysis.
+What to look for:
+•	SYN vs SYN/ACK/RST responses (distinguish open vs closed).
+•	ICMP unreachable messages (indicates filtering).
+•	No response (packets dropped — indicates silent filtering).
+•	Retransmissions and timing (rate-limiting).
+Why it matters: Packet traces provide ground truth beyond Nmap’s inference and help identify intermediate devices dropping traffic.
+Evidence to include in report: Relevant packet screenshots or filter extracts (e.g., tcp.flags.syn==1 && tcp.flags.ack==1).
+•	Identify potential security risks from open ports
+•	Purpose: Convert scan results into actionable security findings and prioritize mitigation.
+Common risk examples:
+•	Open management ports (SSH/RDP) exposed to broad networks — brute-force attacks, weak credentials.
+•	Web servers (80/443) running outdated software — remote code execution, remote file inclusion.
+•	File sharing (SMB 445, NetBIOS 139) — sensitive shares exposed, worm propagation risk.
+•	Open databases without access controls (MySQL 3306, PostgreSQL 5432) — data exfiltration risk.
+How to assess severity: Consider service sensitivity, network segmentation, whether authentication is required, and known CVEs for the service/version.
+Report section: For each open port, include a short risk statement and recommended mitigation (e.g., “Close port / firewall to only allow admin subnet; require key-based SSH and disable password login”).
+Deliverables: Prioritized remediation list (High/Medium/Low) with suggested actions.
+Save scan results as a text or HTML file
+•	Purpose: Produce auditable, shareable output to include in the report and preserve evidence.
+#Nmap output formats:
+•	Normal text: -oN output.txt
+•	XML (machine-readable): -oX output.xml
+•	Grepable (legacy): -oG output.gnmap
+•	All formats at once: -oA <basename> (creates .nmap, .xml, .gnmap)
+•	HTML (convert XML using xsltproc or third-party tools) or use ndiff/reporting tools.
+Examples:
+•	sudo nmap -sS -p1-1024 -oN scan-results.txt 192.168.1.0/24
+•	sudo nmap -sS -sV -oA scan-results 192.168.1.0/24
+•	Why it matters: Structured outputs support automation (parsing), reporting, and storage for compliance.
+Include in report: A copy of the .txt output or key excerpts, plus the exact command used and timestamp.
+
+
